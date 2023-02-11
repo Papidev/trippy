@@ -1,5 +1,8 @@
 <template>
-  <div>
-    <NuxtWelcome />
-  </div>
+  <Map />
 </template>
+
+<style>
+body {
+}
+</style>
