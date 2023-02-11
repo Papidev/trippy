@@ -9,7 +9,13 @@
   },
   "devDependencies": {
     "@nuxtjs/apollo": "^5.0.0-alpha.5",
+    "@nuxtjs/strapi": "^1.7.1",
     "@nuxtjs/tailwindcss": "^6.3.1",
-    "nuxt": "^3.1.2"
+    "nuxt": "^3.1.2",
+    "nuxt-headlessui": "^1.1.1",
+    "nuxt-typed-router": "^2.3.4"
+  },
+  "dependencies": {
+    "maplibre-gl": "^2.4.0"
   }
 }
