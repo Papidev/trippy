@@ -9,45 +9,54 @@
   </div>
 </template>
 
-<script>
+<script lang="ts" setup>
 import { Map, NavigationControl, Marker } from 'maplibre-gl';
-import { shallowRef, onMounted, onUnmounted, markRaw } from 'vue';
+import { shallowRef, onMounted, onUnmounted, markRaw, Raw } from 'vue';
 
-export default {
-  name: 'Map',
-  setup() {
-    const mapContainer = shallowRef(null);
-    const map = shallowRef(null);
+const mapContainer = shallowRef(null);
+const map = shallowRef<Raw<Map> | null>(null);
 
-    onMounted(() => {
-      const apiKey = 'AgQ7PM8YD5zEZghQORfd';
+onMounted(() => {
+  const apiKey = 'AgQ7PM8YD5zEZghQORfd';
 
-      const initialState = { lng: 2.349902, lat: 48.852966, zoom: 14 };
+  const initialState = { lng: 2.349902, lat: 48.852966, zoom: 14 };
 
-      map.value = markRaw(
-        new Map({
-          container: mapContainer.value,
-          style: `https://api.maptiler.com/maps/81778db5-d7c4-4ae9-9974-6d1eb0c8de02/style.json?key=${apiKey}`,
-          center: [initialState.lng, initialState.lat],
-          zoom: initialState.zoom,
-        })
-      );
-      map.value.addControl(new NavigationControl(), 'top-right');
-      //   new Marker({ color: '#FF0000' })
-      //     .setLngLat([139.7525, 35.6841])
-      //     .addTo(map.value);
-    });
+  if (mapContainer?.value) {
+    map.value = markRaw(
+      new Map({
+        container: mapContainer.value,
+        style: `https://api.maptiler.com/maps/81778db5-d7c4-4ae9-9974-6d1eb0c8de02/style.json?key=${apiKey}`,
+        center: [initialState.lng, initialState.lat],
+        zoom: initialState.zoom,
+      })
+    );
+    map.value.addControl(new NavigationControl({}), 'top-right');
+  }
+  //   new Marker({ color: '#FF0000' })
+  //     .setLngLat([139.7525, 35.6841])
+  //     .addTo(map.value);
+});
 
-    onUnmounted(() => {
-      map.value?.remove();
-    });
+const query = gql`
+  query getAttractions {
+    attractions {
+      data {
+        id
+        attributes {
+          name
+          latitude
+          longitude
+        }
+      }
+    }
+  }
+`;
+const variables = { limit: 5 };
+const { data } = await useAsyncQuery(query, variables);
 
-    return {
-      map,
-      mapContainer,
-    };
-  },
-};
+onUnmounted(() => {
+  map.value?.remove();
+});
 </script>
 
 <style scoped>
