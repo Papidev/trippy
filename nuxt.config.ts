@@ -21,4 +21,5 @@ export default defineNuxtConfig({
     clients: { default: { httpEndpoint: 'http://localhost:1337/graphql' } },
   },
   strapi: {},
+  typescript: { strict: true },
 });
