@@ -1,4 +1,5 @@
 <template>
+  {{ selectedMarker }}
   <div class="map-wrap">
     <a href="https://www.maptiler.com" class="watermark"
       ><img
@@ -14,10 +15,24 @@ import { Map, Marker } from 'maplibre-gl';
 import { shallowRef, onMounted, onUnmounted, Raw } from 'vue';
 import { addToMap, initMap } from '@/utils/map/Map';
 import { getAttractionsQuery } from '@/utils/map/Queries';
+import { GeoFeature, GeoJsonSource } from '@/types/Map/Map';
 
 const mapContainer = shallowRef(null);
 const map = shallowRef<Raw<Map> | null>(null);
+const selectedMarker = ref<string | null>(null);
 
+const variables = { limit: ATTRACTIONS_LIMIT };
+const { data: attractions } = await useAsyncQuery(
+  getAttractionsQuery,
+  variables
+);
+const geoJson: GeoJsonSource = {
+  type: 'geojson',
+  data: {
+    type: 'FeatureCollection',
+    features: [],
+  },
+};
 onMounted(() => {
   if (mapContainer?.value) {
     map.value = initMap(mapContainer.value);
@@ -30,11 +45,71 @@ onMounted(() => {
   //     .addTo(map.value);
 });
 
-const variables = { limit: ATTRACTIONS_LIMIT };
-const { data } = await useAsyncQuery(getAttractionsQuery, variables);
-
 onUnmounted(() => {
   map.value?.remove();
+});
+
+watchEffect(() => {
+  if (attractions?.value && map?.value) {
+    const geoFeatures = attractions.value.attractions.data.map(attr => {
+      return {
+        geometry: {
+          coordinates: [attr.attributes.longitude, attr.attributes.latitude],
+          type: 'Point',
+        },
+        type: 'Feature',
+        properties: {},
+      };
+    });
+
+    geoJson.data.features = geoFeatures;
+
+    map.value.on('load', () => {
+      // Add an image to use as a custom marker
+      if (map?.value) {
+        map.value.loadImage(
+          'https://maplibre.org/maplibre-gl-js-docs/assets/osgeo-logo.png',
+          (error, image) => {
+            if (error) throw error;
+            map.value.addImage('custom-marker', image);
+            // Add a GeoJSON source with 15 points
+            map.value.addSource('conferences', geoJson);
+
+            // Add a symbol layer
+            map.value.addLayer({
+              id: 'conferences',
+              type: 'symbol',
+              source: 'conferences',
+              layout: {
+                'icon-image': 'custom-marker',
+                // get the year from the source's "year" property
+                'text-field': ['get', 'year'],
+                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-offset': [0, 1.25],
+                'text-anchor': 'top',
+              },
+            });
+          }
+        );
+      }
+    });
+
+    // Add a GeoJSON source with 15 points
+    // map.value.addSource('conferences', geoJson);
+    // map.value.addLayer({
+    //   id: 'conferences',
+    //   type: 'symbol',
+    //   source: 'conferences',
+    //   layout: {
+    //     // 'icon-image': 'custom-marker',
+    //     // get the year from the source's "year" property
+    //     'text-field': ['get', 'year'],
+    //     'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+    //     'text-offset': [0, 1.25],
+    //     'text-anchor': 'top',
+    //   },
+    // });
+  }
 });
 </script>
 
