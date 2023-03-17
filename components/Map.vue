@@ -1,5 +1,6 @@
 <template>
   {{ selectedMarker }}
+
   <div class="map-wrap">
     <a href="https://www.maptiler.com" class="watermark"
       ><img
@@ -11,7 +12,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Map, Marker } from 'maplibre-gl';
+import { Map, Marker, Popup } from 'maplibre-gl';
 import { shallowRef, onMounted, onUnmounted, Raw } from 'vue';
 import { addToMap, initMap } from '@/utils/map/Map';
 import { getAttractionsQuery } from '@/utils/map/Queries';
@@ -51,6 +52,7 @@ onUnmounted(() => {
 
 watchEffect(() => {
   if (attractions?.value && map?.value) {
+    console.log('attractions?.value', attractions?.value);
     const geoFeatures = attractions.value.attractions.data.map(attr => {
       return {
         geometry: {
@@ -58,7 +60,9 @@ watchEffect(() => {
           type: 'Point',
         },
         type: 'Feature',
-        properties: {},
+        properties: {
+          description: attr.attributes.name,
+        },
       };
     });
 
@@ -91,6 +95,22 @@ watchEffect(() => {
             });
           }
         );
+        map.value.on('click', 'conferences', e => {
+          var coordinates = e.features[0].geometry.coordinates.slice();
+          var description = e.features[0].properties.description;
+
+          // Ensure that if the map is zoomed out such that multiple
+          // copies of the feature are visible, the popup appears
+          // over the copy being pointed to.
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          new Popup()
+            .setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map.value);
+        });
       }
     });
 
