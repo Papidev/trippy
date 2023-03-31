@@ -10,18 +10,16 @@ const styleUrl =
   'https://api.maptiler.com/maps/81778db5-d7c4-4ae9-9974-6d1eb0c8de02/style.json';
 // const marker = 'https://maplibre.org/maplibre-gl-js-docs/assets/osgeo-logo.png';
 
-export const initMap = (mapContainer: HTMLElement) => {
+export const initMap = (mapContainer: HTMLDivElement) => {
   const apiKey = 'AgQ7PM8YD5zEZghQORfd';
   const initialState = { lng: longitude, lat: latitude, zoom };
-  return markRaw(
-    new Map({
-      container: mapContainer,
-      style: `${styleUrl}?key=${apiKey}`,
-      center: [initialState.lng, initialState.lat],
-      zoom: initialState.zoom,
-      minZoom: MAP_MIN_ZOOM,
-    })
-  );
+  return new Map({
+    container: mapContainer,
+    style: `${styleUrl}?key=${apiKey}`,
+    center: [initialState.lng, initialState.lat],
+    zoom: initialState.zoom,
+    minZoom: MAP_MIN_ZOOM,
+  });
 };
 
 export const addToMap = (map: Raw<Map>) => {
